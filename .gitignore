@@ -1,0 +1,5 @@
+captures/*
+!captures/.gitkeep
+*.pcap
+*.pcapng
+.DS_Store
