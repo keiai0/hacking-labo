@@ -1,0 +1,35 @@
+services:
+  attacker:
+    image: hacklabo/attacker:latest
+    hostname: attacker
+    volumes:
+      - "../../../captures:/captures"
+      - "./:/work"
+      - "loot:/loot"              # 脆弱版の成果物（読み取り）
+      - "loot_fixed:/loot_fixed"  # 対策版の成果物（読み取り）
+    networks: [lab]
+
+  vuln:
+    build: ./vulnerable
+    init: true
+    hostname: vuln
+    mem_limit: 256m
+    volumes: ["loot:/loot"]
+    networks: [lab]
+
+  fixed:
+    build: ./fixed
+    init: true
+    hostname: fixed
+    mem_limit: 256m
+    volumes: ["loot_fixed:/loot_fixed"]
+    networks: [lab]
+
+volumes:
+  loot:
+  loot_fixed:
+
+networks:
+  lab:
+    internal: true
+    ipam: { config: [{ subnet: 10.10.3.0/24 }] }
