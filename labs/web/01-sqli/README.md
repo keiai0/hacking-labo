@@ -54,7 +54,7 @@ sqlmap -u 'http://vuln:8080/search?q=1' --batch --dump -T users
 - SQLインジェクションの原理、バインド機構（プレースホルダ）の利用
 - エスケープ処理との違い（バインドが本質的対策）、WAFは多層防御の補助
 - 認証バイパス・情報漏洩・改ざんに至る影響範囲
-- パスワードのハッシュ保存（[[crypto/01-password-crack]] と関連）
+- パスワードのハッシュ保存（[[analysis/password-crack]] と関連）
 - ブラインドSQLi、エラーベース/UNIONベースの違い
 
 ## 後片付け

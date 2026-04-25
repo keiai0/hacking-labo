@@ -1,4 +1,4 @@
-# crypto/01-password-crack — パスワード解析（John the Ripper / hashcat）
+# analysis/password-crack — パスワード解析（John the Ripper / hashcat）
 
 ## 目的
 漏洩したハッシュや暗号化ファイルを解析する側を体験し、「保存方式の強さ」で解析コストがどれだけ変わるかを理解する。弱い方式（生MD5・md5crypt・ZipCrypto）は現実的な時間で割れ、強い方式（bcrypt＋強いパスワード）は割れないことを手元で確かめる。
@@ -15,8 +15,8 @@
 
 ## 攻撃
 ```sh
-make up    LAB=crypto/01-password-crack
-make shell LAB=crypto/01-password-crack
+make up    LAB=analysis/password-crack
+make shell LAB=analysis/password-crack
 WL=/usr/share/wordlists/rockyou.txt
 
 # 1) 生MD5（ソルトなし）
@@ -61,5 +61,5 @@ GPUが使えないためCPU解析。弱いパスワード＋小さな前提で�
 
 ## 後片付け
 ```sh
-make down LAB=crypto/01-password-crack   # 共有ボリューム(loot)も削除される
+make down LAB=analysis/password-crack   # 共有ボリューム(loot)も削除される
 ```

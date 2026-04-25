@@ -1,0 +1,60 @@
+services:
+  attacker:
+    image: hacklabo/attacker:latest
+    hostname: attacker
+    cap_add: [NET_ADMIN, NET_RAW]
+    volumes: ["../../../captures:/captures", "./:/work"]
+    networks: { lab: { ipv4_address: 10.10.0.10 } }
+
+  # 社内サーバ（平文サービス群・管理画面・SSH）。recon/sniffing の標的 + FWトグル
+  web:
+    build: ./web
+    init: true
+    hostname: web
+    mem_limit: 256m
+    cap_add: [NET_ADMIN]          # make fw-on/off 用
+    networks: { lab: { ipv4_address: 10.10.0.20 } }
+
+  # 暗号化サービス（SSH/SFTP・HTTPS）。sniffing の比較対象
+  secure:
+    build: ./secure
+    init: true
+    hostname: secure
+    mem_limit: 256m
+    networks: { lab: { ipv4_address: 10.10.0.30 } }
+
+  # 利用者役（定期的にログインして通信を流す）
+  victim:
+    build: ./victim
+    init: true
+    hostname: victim
+    mem_limit: 128m
+    depends_on: [web, secure]
+    networks: { lab: { ipv4_address: 10.10.0.50 } }
+
+  # --- トグル（必要時のみ起動） ---
+  # make capture : ラボ全体の通信を pcap 記録
+  capture:
+    image: hacklabo/attacker:latest
+    profiles: [capture]
+    network_mode: host
+    cap_add: [NET_ADMIN, NET_RAW]
+    volumes: ["../../../captures:/captures"]
+    command: sh -c 'tcpdump -i hl-net0 -U -w /captures/playground_$$(date +%Y%m%d-%H%M%S).pcap'
+
+  # make ids : Suricata で監視（detection）。公式イメージを使用
+  ids:
+    image: jasonish/suricata:7.0
+    profiles: [ids]
+    network_mode: host
+    cap_add: [NET_ADMIN, NET_RAW]
+    volumes:
+      - "../../../captures:/captures"
+      - "./ids/custom.rules:/custom.rules:ro"
+    command: ["-i","hl-net0","-S","/custom.rules","-l","/captures/suricata"]
+
+networks:
+  lab:
+    internal: true
+    driver_opts: { com.docker.network.bridge.name: hl-net0 }
+    ipam: { config: [{ subnet: 10.10.0.0/24 }] }

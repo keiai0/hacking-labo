@@ -5,33 +5,40 @@
 - 目的：情報処理安全確保支援士の対策
 - ローカルに脆弱なネットワーク／Webシステムを構築し、攻撃 → 対策 → 再攻撃で確認、を繰り返す
 
-## 進め方
-1. 単元ラボで個々の攻撃と対策を学ぶ（1テーマ1環境、必要なものだけ起動）
-2. 総合シナリオ環境で、企業ネットワーク全体を対象に侵入〜検知〜対応を通しで行う
+## 設計方針：標的＋トグル
+環境を2層で考え、数を絞る。
+- **標的（ターゲット環境）**… 攻撃される側。似たトポロジ・ツールのテーマは1環境に集約する。
+- **トグル（横断機能）**… どの標的にも後付けできる観測・防御。プロファイルや Make ターゲットでオン/オフする。
 
-各ラボは `vulnerable/`（脆弱版）と `fixed/`（対策版）を持つ。
+標的は1つずつ起動し、脆弱版/対策版はページ内モードや FW トグルで切り替える。約30テーマ → 標的5〜6個＋トグル数個に圧縮している。
 
 ## 構成
 
 ```
 hacking-labo/
-├── Makefile                 # make up LAB=web/01-sqli など
-├── common/attacker/         # 攻撃用コンテナ（Kali）
-├── labs/<分野>/<番号-テーマ>/
-│   ├── README.md            # 目的 / 攻撃 / 対策 / 試験での問われ方
-│   ├── compose.yml
-│   ├── vulnerable/
-│   └── fixed/
-├── scenarios/corp-network/  # 総合シナリオ（外部 / DMZ / 内部）
-├── captures/                # pcap（git管理外）
+├── Makefile                 # make up/capture/ids/fw-on LAB=<分野>/<環境>
+├── common/attacker/         # 攻撃用コンテナ（Kali、全環境共通）
+├── labs/
+│   ├── network/playground/  # 偵察・盗聴・ARP・DNS・FW・TLS-MITM（+capture/ids/fwトグル）
+│   ├── web/webapp/          # Web脆弱性ぜんぶ＋web認証（+WAFトグル、ページ内 vuln/fixed）
+│   ├── analysis/            # パスワード解析＋フォレンジック（オフライン解析）
+│   ├── mail/                # SPF/DKIM/DMARC・オープンリレー
+│   ├── auth/keycloak/       # OAuth/OIDC
+│   ├── secure-coding/       # C（BOF・競合・整数オーバーフロー）
+│   └── container/           # コンテナ脱出・クラウド設定ミス（VM内で実施）
+├── scenarios/corp-network/  # 総合シナリオ（playground+webapp+mail+トグルの合成）
+├── captures/                # pcap・解析成果物（git管理外）
 └── notes/                   # 用語・法規・午後問題の振り返り
 ```
 
 ```mermaid
 flowchart LR
-  A[攻撃用コンテナ] --> T[標的コンテナ]
-  C[キャプチャ用コンテナ] -.tcpdump.-> T
-  C --> P[captures/*.pcap] --> W[Wireshark on Mac]
+  A[攻撃用コンテナ] --> T[標的環境]
+  subgraph TG[トグル]
+    C[capture tcpdump] & I[IDS Suricata] & F[FW iptables] & W[WAF ModSecurity]
+  end
+  TG -.後付け.-> T
+  C --> P[captures/*.pcap] --> WS[Wireshark on Mac]
   B[Firefox + Burp on Mac] --> T
 ```
 
@@ -53,34 +60,34 @@ flowchart LR
 | 防御・検知 | ModSecurity + OWASP CRS, Suricata, rsyslog + Loki + Grafana |
 | 解析 | Volatility 3, The Sleuth Kit, gdb |
 
-## ラボ一覧（実施順）
+## 標的環境の一覧
 
 状態：構築済 → 環境が動く / 学習済 → 攻撃と対策を一通り実施
 
-| # | 分野 | 内容 | 状態 |
+| 環境 | パス | カバーするテーマ | 状態 |
 |---|---|---|---|
-| 1 | network | 偵察（nmap）、盗聴（FTP/Telnet/HTTP → Wireshark） | 構築済 |
-| 2 | crypto | パスワード解析（John/hashcat）、ハッシュとソルト | 構築済 |
-| 3 | web | SQLi, XSS, CSRF, SSRF, OSコマンドインジェクション, パストラバーサル, XXE, オープンリダイレクト, CORS, WAF | 構築中（01-sqli） |
-| 4 | crypto / auth | 自前CAでTLS、証明書未検証のMITM、総当たり・パスワードリスト攻撃、セッション固定、JWT改ざん、OAuth/OIDC | 未 |
-| 5 | network | ARPスプーフィング、DNS、FW設計（iptables）、VPN | 未 |
-| 6 | mail | なりすまし → SPF/DKIM/DMARC、オープンリレー | 未 |
-| 7 | detection | Suricata、ログ収集・分析 | 未 |
-| 8 | scenario | 総合シナリオ環境（侵入 → 検知 → 対応） | 未 |
-| 9 | forensics | pcapからC2通信の発見、ログ追跡、メモリ解析 | 未 |
-| 10 | secure-coding | バッファオーバーフロー、競合状態、整数オーバーフロー（C） | 未 |
-| 11 | container | 特権コンテナからの脱出、クラウド設定ミス | 未 |
+| ネットワーク演習場 | `network/playground` | 偵察、盗聴、ARP、DNS、FW、TLS-MITM | 構築済（偵察・盗聴・FW・IDS）／ARP・DNS・TLS-MITMは追加予定 |
+| Webアプリ | `web/webapp` | SQLi, XSS, CSRF, SSRF, OSコマンド, パストラバーサル, XXE, リダイレクト, CORS, セッション, JWT, ログイン総当たり, WAF | 構築中（SQLiは暫定で `web/01-sqli`、webappへ統合予定） |
+| 解析 | `analysis/password-crack` ほか | パスワード解析、フォレンジック（pcap/ログ/メモリ） | 構築済（パスワード解析）／フォレンジック追加予定 |
+| メール | `mail` | なりすまし → SPF/DKIM/DMARC、オープンリレー | 未 |
+| OAuth/OIDC | `auth/keycloak` | 認可フロー、設定ミス | 未 |
+| セキュアコーディング | `secure-coding` | BOF、競合状態、整数オーバーフロー（C） | 未 |
+| コンテナ/クラウド | `container` | コンテナ脱出、クラウド設定ミス（VM内） | 未 |
+| 総合シナリオ | `scenarios/corp-network` | 侵入 → 検知 → 対応（上記の合成） | 未 |
 
-※ #1 は `01-recon` と `02-sniffing` の2ラボを用意。
+トグル：capture（pcap記録）／ids（Suricata）／fw-on,fw-off（iptables）／waf（ModSecurity, webapp）
 
 保留：Windows / Active Directory
 
 ## クイックスタート
 ```sh
-make attacker                      # 攻撃用コンテナをビルド（初回のみ）
-make list                          # ラボ一覧
-make up   LAB=network/01-recon     # 起動
-make shell LAB=network/01-recon    # 攻撃用コンテナに入る
-make down LAB=network/01-recon     # 停止・削除
+make attacker                          # 攻撃用コンテナをビルド（初回のみ）
+make list                              # 環境一覧
+make up      LAB=network/playground    # 起動
+make shell   LAB=network/playground    # 攻撃用コンテナに入る
+make capture LAB=network/playground    # トグル: 通信をpcap記録
+make ids     LAB=network/playground    # トグル: IDS(Suricata)
+make fw-on   LAB=network/playground    # トグル: 標的のFW有効化
+make down    LAB=network/playground    # 停止・削除
 ```
-各ラボの手順は、ラボ内の `README.md` を参照。
+各環境の手順は、環境内の `README.md` を参照。

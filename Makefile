@@ -3,7 +3,7 @@ LAB ?=
 PROJECT = hl-$(subst /,-,$(LAB))
 COMPOSE = docker compose -f labs/$(LAB)/compose.yml -p $(PROJECT)
 
-.PHONY: help attacker list up down shell ps logs capture capture-stop clean _require-lab
+.PHONY: help attacker list up down shell ps logs capture capture-stop ids ids-stop fw-on fw-off clean _require-lab
 
 help: ## コマンド一覧
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
@@ -18,7 +18,7 @@ up: _require-lab ## ラボを起動
 	$(COMPOSE) up -d --build
 
 down: _require-lab ## ラボを停止・削除
-	$(COMPOSE) --profile capture down -v
+	$(COMPOSE) --profile capture --profile ids down -v
 
 shell: _require-lab ## 攻撃用コンテナに入る
 	$(COMPOSE) exec attacker bash
@@ -34,6 +34,18 @@ capture: _require-lab ## ネットワーク全体のキャプチャ開始（capt
 
 capture-stop: _require-lab ## キャプチャ停止
 	$(COMPOSE) --profile capture stop capture
+
+ids: _require-lab ## IDS(Suricata)を起動 ※playground専用
+	$(COMPOSE) --profile ids up -d --build ids
+
+ids-stop: _require-lab ## IDSを停止 ※playground専用
+	$(COMPOSE) --profile ids stop ids
+
+fw-on: _require-lab ## 標的のFWを有効化 ※playground専用
+	$(COMPOSE) exec web /fw.sh on
+
+fw-off: _require-lab ## 標的のFWを無効化 ※playground専用
+	$(COMPOSE) exec web /fw.sh off
 
 clean: ## 未使用のイメージ等を削除
 	docker system prune -f
