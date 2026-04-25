@@ -1,0 +1,27 @@
+services:
+  # 攻撃用コンテナ（sqlmap 等）。ブラウザ+Burp は Mac から 127.0.0.1 で触る
+  attacker:
+    image: hacklabo/attacker:latest
+    hostname: attacker
+    volumes: ["./:/work"]
+    networks: [lab]
+
+  vuln:
+    build: ./vulnerable
+    init: true
+    hostname: vuln
+    mem_limit: 256m
+    ports: ["127.0.0.1:8081:8080"]   # http://127.0.0.1:8081
+    networks: [lab]
+
+  fixed:
+    build: ./fixed
+    init: true
+    hostname: fixed
+    mem_limit: 256m
+    ports: ["127.0.0.1:8082:8080"]   # http://127.0.0.1:8082
+    networks: [lab]
+
+networks:
+  lab:
+    ipam: { config: [{ subnet: 10.10.4.0/24 }] }

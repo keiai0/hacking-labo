@@ -60,8 +60,8 @@ flowchart LR
 | # | 分野 | 内容 | 状態 |
 |---|---|---|---|
 | 1 | network | 偵察（nmap）、盗聴（FTP/Telnet/HTTP → Wireshark） | 構築済 |
-| 2 | crypto | パスワード解析（John/hashcat）、ハッシュとソルト | 未 |
-| 3 | web | SQLi, XSS, CSRF, SSRF, OSコマンドインジェクション, パストラバーサル, XXE, オープンリダイレクト, CORS, WAF | 未 |
+| 2 | crypto | パスワード解析（John/hashcat）、ハッシュとソルト | 構築済 |
+| 3 | web | SQLi, XSS, CSRF, SSRF, OSコマンドインジェクション, パストラバーサル, XXE, オープンリダイレクト, CORS, WAF | 構築中（01-sqli） |
 | 4 | crypto / auth | 自前CAでTLS、証明書未検証のMITM、総当たり・パスワードリスト攻撃、セッション固定、JWT改ざん、OAuth/OIDC | 未 |
 | 5 | network | ARPスプーフィング、DNS、FW設計（iptables）、VPN | 未 |
 | 6 | mail | なりすまし → SPF/DKIM/DMARC、オープンリレー | 未 |
