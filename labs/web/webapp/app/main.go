@@ -15,7 +15,13 @@ var db *sql.DB
 // メニュー（ページを追加したらここに1行足す）
 var menu = []struct{ Path, Name string }{
 	{"/sqli", "SQLインジェクション"},
-	{"/xss", "クロスサイトスクリプティング（反射型）"},
+	{"/xss", "反射型XSS"},
+	{"/cmdi", "OSコマンドインジェクション"},
+	{"/path", "パストラバーサル"},
+	{"/ssrf", "SSRF"},
+	{"/redirect", "オープンリダイレクト"},
+	{"/cors", "CORS設定ミス"},
+	{"/csrf", "CSRF"},
 }
 
 // mode は vuln（既定）か fixed
@@ -63,6 +69,12 @@ func main() {
 	})
 	http.HandleFunc("/sqli", sqliHandler)
 	http.HandleFunc("/xss", xssHandler)
+	http.HandleFunc("/cmdi", cmdiHandler)
+	http.HandleFunc("/path", pathHandler)
+	http.HandleFunc("/ssrf", ssrfHandler)
+	http.HandleFunc("/redirect", redirectHandler)
+	http.HandleFunc("/cors", corsHandler)
+	http.HandleFunc("/csrf", csrfHandler)
 
 	log.Println("listening :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))

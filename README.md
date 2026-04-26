@@ -67,7 +67,7 @@ flowchart LR
 | 環境 | パス | カバーするテーマ | 状態 |
 |---|---|---|---|
 | ネットワーク演習場 | `network/playground` | 偵察、盗聴、ARP、DNS、FW、TLS-MITM | 構築済（偵察・盗聴・FW・IDS・DNS動作確認済／ARP・TLS-MITMは手順記載） |
-| Webアプリ | `web/webapp` | SQLi, XSS, CSRF, SSRF, OSコマンド, パストラバーサル, XXE, リダイレクト, CORS, セッション, JWT, ログイン総当たり, WAF | 構築中（SQLi・XSS・WAFトグル動作確認済／他ページ追加予定） |
+| Webアプリ | `web/webapp` | SQLi, XSS, OSコマンド, パストラバーサル, SSRF, リダイレクト, CORS, CSRF ＋ WAFトグル（動作確認済）／ XXE・セッション・JWT・ログイン総当たりは追加予定 | 構築済（8ページ＋WAF） |
 | 解析 | `analysis/password-crack` ほか | パスワード解析、フォレンジック（pcap/ログ/メモリ） | 構築済（パスワード解析）／フォレンジック追加予定 |
 | メール | `mail` | なりすまし → SPF/DKIM/DMARC、オープンリレー | 未 |
 | OAuth/OIDC | `auth/keycloak` | 認可フロー、設定ミス | 未 |
