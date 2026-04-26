@@ -18,7 +18,7 @@ up: _require-lab ## ラボを起動
 	$(COMPOSE) up -d --build
 
 down: _require-lab ## ラボを停止・削除
-	$(COMPOSE) --profile capture --profile ids down -v
+	$(COMPOSE) --profile capture --profile ids --profile waf down -v
 
 shell: _require-lab ## 攻撃用コンテナに入る
 	$(COMPOSE) exec attacker bash
@@ -46,6 +46,12 @@ fw-on: _require-lab ## 標的のFWを有効化 ※playground専用
 
 fw-off: _require-lab ## 標的のFWを無効化 ※playground専用
 	$(COMPOSE) exec web /fw.sh off
+
+waf-on: _require-lab ## 前段WAFを起動 ※web/webapp専用（:8090経由）
+	$(COMPOSE) --profile waf up -d waf
+
+waf-off: _require-lab ## 前段WAFを停止 ※web/webapp専用
+	$(COMPOSE) --profile waf stop waf
 
 clean: ## 未使用のイメージ等を削除
 	docker system prune -f

@@ -51,8 +51,30 @@ grep -o '"signature":"[^"]*"' captures/suricata/eve.json | sort | uniq -c
 ```
 → Cleartext FTP / Telnet を検知。ルールは `ids/custom.rules`。
 
-### 4) ARP / DNS / TLS-MITM（追加予定）
-同じ環境に手順を追加していく。ARPスプーフィングは attacker に dsniff/arpspoof を用意済み（手順はこの環境で実施）。
+### 4) DNS ゾーン転送（AXFR）
+`dns`（10.10.0.40）は `allow-transfer { any; }` の設定ミスがある。
+```sh
+dig +noall +answer @10.10.0.40 corp.local AXFR
+# → vpn / backup / jenkins-dev / admin など内部ホストが丸見え
+```
+対策: `named.conf` の `allow-transfer` をセカンダリに限定（`{ none; }` か特定IP）、再帰も内部に限定。
+
+### 5) ARPスプーフィング（中間者攻撃）
+attacker に `arpspoof`（dsniff）を用意済み。web と victim の間に割り込む。
+```sh
+sysctl -w net.ipv4.ip_forward=1
+arpspoof -i eth0 -t 10.10.0.50 10.10.0.20     # victim に web を詐称（別ターミナル）
+arpspoof -i eth0 -t 10.10.0.20 10.10.0.50     # web に victim を詐称
+# 経路に入った状態で tcpdump / make capture により平文を取得
+```
+※ 実行はこの環境内で各自が行う。対策: スイッチのDAI（Dynamic ARP Inspection）、静的ARP、通信の暗号化。
+
+### 6) TLS証明書の検証不備（HTTPSのMITM）
+victim は `curl -k`（証明書を検証しない）で secure にアクセスしている。ARPで経路に入り `mitmproxy` を挟むと、HTTPSでも復号できてしまう。
+```sh
+mitmproxy --mode transparent    # 経路上で復号（victimが検証しないため成立）
+```
+対策: 証明書を必ず検証する（`-k` を使わない／ピン留め）、HSTS。検証していれば警告で遮断される点が要点。
 
 ## 試験での問われ方
 - ポートスキャンと攻撃面の縮小、FWのデフォルトDENY

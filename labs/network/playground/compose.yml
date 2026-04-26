@@ -23,6 +23,14 @@ services:
     mem_limit: 256m
     networks: { lab: { ipv4_address: 10.10.0.30 } }
 
+  # DNSサーバ（ゾーン転送の設定ミス）
+  dns:
+    build: ./dns
+    init: true
+    hostname: dns
+    mem_limit: 128m
+    networks: { lab: { ipv4_address: 10.10.0.40 } }
+
   # 利用者役（定期的にログインして通信を流す）
   victim:
     build: ./victim

@@ -1,0 +1,34 @@
+services:
+  # 攻撃用コンテナ（sqlmap等）。ブラウザ+Burpは Mac から 127.0.0.1 で触る
+  attacker:
+    image: hacklabo/attacker:latest
+    hostname: attacker
+    volumes: ["./:/work"]
+    networks: [lab]
+
+  # 統合Webアプリ本体
+  app:
+    build: ./app
+    init: true
+    hostname: app
+    mem_limit: 256m
+    ports: ["127.0.0.1:8080:8080"]   # WAFなし直結
+    networks: [lab]
+
+  # --- トグル: WAF（ModSecurity + OWASP CRS）前段プロキシ ---
+  # make up のあと「make up ... （wafプロファイル）」で起動。:8090 経由がWAFあり
+  waf:
+    image: owasp/modsecurity-crs:4.30.0-nginx-202610180210
+    profiles: [waf]
+    depends_on: [app]
+    environment:
+      BACKEND: "http://app:8080"
+      MODSEC_RULE_ENGINE: "On"
+      PARANOIA: "1"
+      BLOCKING_PARANOIA: "1"
+    ports: ["127.0.0.1:8090:8080"]   # WAF経由
+    networks: [lab]
+
+networks:
+  lab:
+    ipam: { config: [{ subnet: 10.10.5.0/24 }] }
