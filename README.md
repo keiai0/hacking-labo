@@ -69,7 +69,7 @@ flowchart LR
 | ネットワーク演習場 | `network/playground` | 偵察、盗聴、ARP、DNS、FW、TLS-MITM | 構築済（偵察・盗聴・FW・IDS・DNS動作確認済／ARP・TLS-MITMは手順記載） |
 | Webアプリ | `web/webapp` | SQLi, XSS, OSコマンド, パストラバーサル, SSRF, リダイレクト, CORS, CSRF, セッション固定, JWT, 総当たり, XXE(PHP) ＋ WAFトグル | 構築済（11ページ＋WAF） |
 | 解析 | `analysis/password-crack` ほか | パスワード解析、フォレンジック（pcap/ログ/メモリ） | 構築済（パスワード解析）／フォレンジック追加予定 |
-| メール | `mail` | なりすまし → SPF/DKIM/DMARC、オープンリレー | 未 |
+| メール | `mail` | なりすまし → SPF/DKIM/DMARC、オープンリレー | 構築済（オープンリレー・SPF動作確認済／DKIMは解説） |
 | OAuth/OIDC | `auth/keycloak` | 認可フロー、設定ミス | 未 |
 | セキュアコーディング | `secure-coding` | BOF、競合状態、整数オーバーフロー（C） | 未 |
 | コンテナ/クラウド | `container` | コンテナ脱出、クラウド設定ミス（VM内） | 未 |

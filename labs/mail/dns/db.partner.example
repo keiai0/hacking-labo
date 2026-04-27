@@ -1,0 +1,11 @@
+$TTL 604800
+@   IN  SOA ns.partner.example. admin.partner.example. (
+        2026110801 604800 86400 2419200 604800 )
+@       IN  NS      ns.partner.example.
+ns      IN  A       10.10.6.40
+@       IN  MX  10  mail.partner.example.
+mail    IN  A       10.10.6.99
+; SPF: 正規の送信元は 10.10.6.99 のみ。それ以外は -all で拒否(hardfail)
+@       IN  TXT     "v=spf1 ip4:10.10.6.99 -all"
+; DMARC: SPF/DKIM失敗は拒否ポリシー
+_dmarc  IN  TXT     "v=DMARC1; p=reject; rua=mailto:dmarc@partner.example"

@@ -1,0 +1,38 @@
+services:
+  attacker:
+    image: hacklabo/attacker:latest
+    hostname: attacker
+    volumes: ["./:/work"]
+    networks: { lab: { ipv4_address: 10.10.6.10 } }   # SPFに載っていない送信元
+
+  dns:
+    build: ./dns
+    init: true
+    hostname: dns
+    mem_limit: 128m
+    networks: { lab: { ipv4_address: 10.10.6.40 } }
+
+  # 脆弱版: オープンリレー + SPF検証なし
+  mailv:
+    build: ./mailv
+    init: true
+    hostname: mailv
+    mem_limit: 256m
+    dns: [10.10.6.40]
+    depends_on: [dns]
+    networks: { lab: { ipv4_address: 10.10.6.20 } }
+
+  # 対策版: 中継制限 + SPF検証
+  mailf:
+    build: ./mailf
+    init: true
+    hostname: mailf
+    mem_limit: 256m
+    dns: [10.10.6.40]
+    depends_on: [dns]
+    networks: { lab: { ipv4_address: 10.10.6.30 } }
+
+networks:
+  lab:
+    internal: true
+    ipam: { config: [{ subnet: 10.10.6.0/24 }] }
