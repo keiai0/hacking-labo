@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 
 	_ "modernc.org/sqlite"
 )
@@ -22,6 +24,10 @@ var menu = []struct{ Path, Name string }{
 	{"/redirect", "オープンリダイレクト"},
 	{"/cors", "CORS設定ミス"},
 	{"/csrf", "CSRF"},
+	{"/session", "セッション固定"},
+	{"/jwt", "JWT検証不備"},
+	{"/brute", "ログイン総当たり"},
+	{"/xxe", "XXE（PHP）"},
 }
 
 // mode は vuln（既定）か fixed
@@ -75,6 +81,12 @@ func main() {
 	http.HandleFunc("/redirect", redirectHandler)
 	http.HandleFunc("/cors", corsHandler)
 	http.HandleFunc("/csrf", csrfHandler)
+	http.HandleFunc("/session", sessionHandler)
+	http.HandleFunc("/jwt", jwtHandler)
+	http.HandleFunc("/brute", bruteHandler)
+	// XXEページは PHP サイドカーへプロキシ
+	php, _ := url.Parse("http://phpapp:8080")
+	http.Handle("/xxe", httputil.NewSingleHostReverseProxy(php))
 
 	log.Println("listening :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))

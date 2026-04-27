@@ -15,6 +15,14 @@ services:
     ports: ["127.0.0.1:8080:8080"]   # WAFなし直結
     networks: [lab]
 
+  # XXE演習用PHP（Goアプリが /xxe をここへプロキシ）。直接公開しない
+  phpapp:
+    build: ./php
+    init: true
+    hostname: phpapp
+    mem_limit: 128m
+    networks: [lab]
+
   # --- トグル: WAF（ModSecurity + OWASP CRS）前段プロキシ ---
   # make up のあと「make up ... （wafプロファイル）」で起動。:8090 経由がWAFあり
   waf:
