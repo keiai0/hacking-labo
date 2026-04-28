@@ -1,0 +1,42 @@
+services:
+  analysis:
+    image: hacklabo/attacker:latest     # tshark等の解析ツール
+    hostname: analysis
+    cap_add: [NET_ADMIN, NET_RAW]
+    volumes: ["../../../captures:/captures", "./:/work"]
+    networks: { lab: { ipv4_address: 10.10.7.10 } }
+
+  c2:
+    build: ./c2
+    init: true
+    hostname: c2
+    mem_limit: 128m
+    networks: { lab: { ipv4_address: 10.10.7.66 } }
+
+  web:
+    image: nginx:1.27-bookworm
+    hostname: web
+    mem_limit: 128m
+    networks: { lab: { ipv4_address: 10.10.7.30 } }   # 正規サイト（ノイズ）
+
+  infected:
+    build: ./infected
+    init: true
+    hostname: infected
+    mem_limit: 128m
+    depends_on: [c2, web]
+    networks: { lab: { ipv4_address: 10.10.7.20 } }
+
+  capture:
+    image: hacklabo/attacker:latest
+    profiles: [capture]
+    network_mode: host
+    cap_add: [NET_ADMIN, NET_RAW]
+    volumes: ["../../../captures:/captures"]
+    command: sh -c 'mkdir -p /captures/forensics && tcpdump -i hl-net7 -U -w /captures/forensics/capture_$$(date +%Y%m%d-%H%M%S).pcap'
+
+networks:
+  lab:
+    internal: true
+    driver_opts: { com.docker.network.bridge.name: hl-net7 }
+    ipam: { config: [{ subnet: 10.10.7.0/24 }] }
