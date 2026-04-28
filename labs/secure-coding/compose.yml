@@ -1,0 +1,11 @@
+services:
+  box:
+    build:
+      context: .
+      dockerfile: box/Dockerfile
+    init: true
+    hostname: box
+    mem_limit: 256m
+    # 境界外アクセスを体験するため ASLR 等は既定のまま。ネットワーク不要
+    network_mode: none
+    volumes: ["./src:/opt/src"]

@@ -71,7 +71,7 @@ flowchart LR
 | 解析 | `analysis/password-crack`, `analysis/forensics` | パスワード解析、フォレンジック（pcap/C2発見） | 構築済（パスワード解析・ネットワークフォレンジック）／メモリ・ディスクは任意 |
 | メール | `mail` | なりすまし → SPF/DKIM/DMARC、オープンリレー | 構築済（オープンリレー・SPF動作確認済／DKIMは解説） |
 | OAuth/OIDC | `auth/keycloak` | 認可フロー、設定ミス | 未 |
-| セキュアコーディング | `secure-coding` | BOF、競合状態、整数オーバーフロー（C） | 未 |
+| セキュアコーディング | `secure-coding` | BOF（認証バイパス・カナリア）、整数/符号検査（C） | 構築済（BOF・整数検査・カナリア動作確認済／競合状態は追加予定） |
 | コンテナ/クラウド | `container` | コンテナ脱出、クラウド設定ミス（VM内） | 未 |
 | 総合シナリオ | `scenarios/corp-network` | 侵入 → 検知 → 対応（上記の合成） | 未 |
 

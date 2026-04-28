@@ -1,5 +1,6 @@
 # 使い方: make <target> LAB=network/01-recon
 LAB ?=
+SVC ?= attacker
 PROJECT = hl-$(subst /,-,$(LAB))
 COMPOSE = docker compose -f labs/$(LAB)/compose.yml -p $(PROJECT)
 
@@ -20,8 +21,8 @@ up: _require-lab ## ラボを起動
 down: _require-lab ## ラボを停止・削除
 	$(COMPOSE) --profile capture --profile ids --profile waf down -v
 
-shell: _require-lab ## 攻撃用コンテナに入る
-	$(COMPOSE) exec attacker bash
+shell: _require-lab ## 攻撃用コンテナに入る（SVC=box 等で変更可）
+	$(COMPOSE) exec $(SVC) bash
 
 ps: _require-lab ## ラボのコンテナ一覧
 	$(COMPOSE) ps
