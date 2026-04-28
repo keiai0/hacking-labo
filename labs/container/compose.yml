@@ -1,0 +1,25 @@
+services:
+  # 設定ミス: 特権コンテナ（ホスト相当の権限・デバイスが見える）
+  misconfig:
+    build: ./box
+    init: true
+    hostname: misconfig
+    mem_limit: 128m
+    privileged: true          # ← 危険: 全ケーパビリティ・デバイス露出
+    command: ["sleep", "infinity"]
+
+  # ハードニング: 最小権限
+  hardened:
+    build: ./box
+    init: true
+    hostname: hardened
+    mem_limit: 128m
+    user: "1000:1000"                       # 非root
+    read_only: true                         # ルートFS読み取り専用
+    cap_drop: ["ALL"]                       # ケーパビリティ全剥奪
+    security_opt: ["no-new-privileges:true"]
+    tmpfs: ["/tmp"]
+    command: ["sleep", "infinity"]
+
+# ネットワーク不要
+networks: {}
