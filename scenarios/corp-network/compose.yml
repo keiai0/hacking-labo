@@ -1,0 +1,82 @@
+services:
+  # 外部（インターネット）: 攻撃者
+  attacker:
+    image: hacklabo/attacker:latest
+    hostname: attacker
+    cap_add: [NET_ADMIN, NET_RAW]
+    command: sh -c 'ip route replace 10.10.9.0/24 via 10.10.8.2; ip route replace 10.10.10.0/24 via 10.10.8.2; sleep infinity'
+    volumes: ["../../captures:/captures", "./:/work"]
+    networks: { ext: { ipv4_address: 10.10.8.10 } }
+
+  # 境界FW（3セグメントのルータ）
+  fw:
+    build: ./fw
+    init: true
+    hostname: fw
+    mem_limit: 128m
+    cap_add: [NET_ADMIN]
+    sysctls: ["net.ipv4.ip_forward=1"]
+    networks:
+      ext: { ipv4_address: 10.10.8.2 }
+      dmz: { ipv4_address: 10.10.9.2 }
+      int: { ipv4_address: 10.10.10.2 }
+
+  # DMZ: 公開Webサーバ（侵入の入口）
+  web:
+    build: ./node
+    init: true
+    hostname: web
+    mem_limit: 192m
+    cap_add: [NET_ADMIN]
+    environment:
+      GW: "10.10.9.2"
+      ROUTES: "10.10.8.0/24 10.10.10.0/24"
+      START: "nginx sshd"
+    depends_on: [fw]
+    networks: { dmz: { ipv4_address: 10.10.9.20 } }
+
+  # 内部: 機密を持つサーバ（最終目標）
+  dbsrv:
+    build: ./node
+    init: true
+    hostname: dbsrv
+    mem_limit: 192m
+    cap_add: [NET_ADMIN]
+    environment:
+      GW: "10.10.10.2"
+      ROUTES: "10.10.9.0/24 10.10.8.0/24"
+      START: "sshd"
+      SECRET: "FLAG{crown-jewels-customer-db}"
+    depends_on: [fw]
+    networks: { int: { ipv4_address: 10.10.10.20 } }
+
+  # --- トグル ---
+  capture:
+    image: hacklabo/attacker:latest
+    profiles: [capture]
+    network_mode: host
+    cap_add: [NET_ADMIN, NET_RAW]
+    volumes: ["../../captures:/captures"]
+    command: sh -c 'mkdir -p /captures/scenario && tcpdump -i hl-scn-dmz -U -w /captures/scenario/dmz_$$(date +%Y%m%d-%H%M%S).pcap'
+
+  ids:
+    image: jasonish/suricata:7.0
+    profiles: [ids]
+    network_mode: host
+    cap_add: [NET_ADMIN, NET_RAW]
+    volumes: ["../../captures:/captures", "../../labs/network/playground/ids/custom.rules:/custom.rules:ro"]
+    command: ["-i","hl-scn-dmz","-S","/custom.rules","-l","/captures/scenario"]
+
+networks:
+  ext:
+    internal: true
+    driver_opts: { com.docker.network.bridge.name: hl-scn-ext }
+    ipam: { config: [{ subnet: 10.10.8.0/24 }] }
+  dmz:
+    internal: true
+    driver_opts: { com.docker.network.bridge.name: hl-scn-dmz }
+    ipam: { config: [{ subnet: 10.10.9.0/24 }] }
+  int:
+    internal: true
+    driver_opts: { com.docker.network.bridge.name: hl-scn-int }
+    ipam: { config: [{ subnet: 10.10.10.0/24 }] }

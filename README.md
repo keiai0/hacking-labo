@@ -73,7 +73,7 @@ flowchart LR
 | OAuth/OIDC | `auth/keycloak` | 認可フロー、設定ミス | 未 |
 | セキュアコーディング | `secure-coding` | BOF（認証バイパス・カナリア）、整数/符号検査（C） | 構築済（BOF・整数検査・カナリア動作確認済／競合状態は追加予定） |
 | コンテナ/クラウド | `container` | 特権/権限の設定ミス比較（安全）、脱出手順はVM内、クラウド設定ミス | 構築済（特権vsハードニング比較／脱出・クラウドは手順記載） |
-| 総合シナリオ | `scenarios/corp-network` | 侵入 → 検知 → 対応（上記の合成） | 未 |
+| 総合シナリオ | `scenarios/corp-network` | 外部/DMZ/内部をFW分離、侵入→ピボット→検知→対応 | 構築済（分離の到達性確認済／攻撃筋書きは手順） |
 
 トグル：capture（pcap記録）／ids（Suricata）／fw-on,fw-off（iptables）／waf（ModSecurity, webapp）
 
