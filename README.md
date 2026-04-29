@@ -28,7 +28,7 @@ hacking-labo/
 │   └── container/           # コンテナ脱出・クラウド設定ミス（VM内で実施）
 ├── scenarios/corp-network/  # 総合シナリオ（playground+webapp+mail+トグルの合成）
 ├── captures/                # pcap・解析成果物（git管理外）
-└── notes/                   # 用語・法規・午後問題の振り返り
+└── docs/                    # README以外のドキュメント（ROADMAP・用語・法規・午後問題の振り返り）
 ```
 
 ```mermaid
@@ -68,6 +68,7 @@ flowchart LR
 |---|---|---|---|
 | ネットワーク演習場 | `network/playground` | 偵察、盗聴、ARP、DNS、FW、TLS-MITM | 構築済（偵察・盗聴・FW・IDS・DNS動作確認済／ARP・TLS-MITMは手順記載） |
 | Webアプリ | `web/webapp` | SQLi, XSS, OSコマンド, パストラバーサル, SSRF, リダイレクト, CORS, CSRF, セッション固定, JWT, 総当たり, XXE(PHP) ＋ WAFトグル | 構築済（11ページ＋WAF） |
+| PKI/TLS | `crypto/pki` | 自前CA、証明書検証とMITM、電子署名 | 構築済（検証有無でMITM成否・署名の改ざん検知を確認済） |
 | 解析 | `analysis/password-crack`, `analysis/forensics` | パスワード解析、フォレンジック（pcap/C2発見） | 構築済（パスワード解析・ネットワークフォレンジック）／メモリ・ディスクは任意 |
 | メール | `mail` | なりすまし → SPF/DKIM/DMARC、オープンリレー | 構築済（オープンリレー・SPF動作確認済／DKIMは解説） |
 | OAuth/OIDC | `auth/keycloak` | 認可フロー、設定ミス | 未 |
@@ -76,6 +77,8 @@ flowchart LR
 | 総合シナリオ | `scenarios/corp-network` | 外部/DMZ/内部をFW分離、侵入→ピボット→検知→対応 | 構築済（分離の到達性確認済／攻撃筋書きは手順） |
 
 トグル：capture（pcap記録）／ids（Suricata）／fw-on,fw-off（iptables）／waf（ModSecurity, webapp）
+
+進捗・残作業・拡充候補は [docs/ROADMAP.md](docs/ROADMAP.md) にまとめている。
 
 保留：Windows / Active Directory
 
