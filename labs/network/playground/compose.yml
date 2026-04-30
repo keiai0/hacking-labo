@@ -59,6 +59,9 @@ services:
     volumes:
       - "../../../captures:/captures"
       - "./ids/custom.rules:/custom.rules:ro"
+    # Suricataはログ出力先が事前に存在しないと起動しない。captures/はgit管理外で
+    # 毎回消えるため、本来のentrypointを呼ぶ前にディレクトリを作る。
+    entrypoint: ["/bin/sh","-c","mkdir -p /captures/suricata && exec /docker-entrypoint.sh \"$@\"","--"]
     command: ["-i","hl-net0","-S","/custom.rules","-l","/captures/suricata"]
 
 networks:
