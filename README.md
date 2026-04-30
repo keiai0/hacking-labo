@@ -71,7 +71,7 @@ flowchart LR
 | PKI/TLS | `crypto/pki` | 自前CA、証明書検証とMITM、電子署名 | 構築済（検証有無でMITM成否・署名の改ざん検知を確認済） |
 | 解析 | `analysis/password-crack`, `analysis/forensics` | パスワード解析、フォレンジック（pcap/C2発見） | 構築済（パスワード解析・ネットワークフォレンジック）／メモリ・ディスクは任意 |
 | メール | `mail` | なりすまし → SPF/DKIM/DMARC、オープンリレー | 構築済（オープンリレー・SPF動作確認済／DKIMは解説） |
-| OAuth/OIDC | `auth/keycloak` | 認可フロー、設定ミス | 未 |
+| OAuth/OIDC | `auth` | redirect_uri/state/PKCE/IDトークン検証の不備（軽量自作IdP+RP） | 構築済（4種の不備を vuln/fixed で確認済） |
 | セキュアコーディング | `secure-coding` | BOF（認証バイパス・カナリア）、整数/符号検査（C） | 構築済（BOF・整数検査・カナリア動作確認済／競合状態は追加予定） |
 | コンテナ/クラウド | `container` | 特権/権限の設定ミス比較（安全）、脱出手順はVM内、クラウド設定ミス | 構築済（特権vsハードニング比較／脱出・クラウドは手順記載） |
 | 総合シナリオ | `scenarios/corp-network` | 外部/DMZ/内部をFW分離、侵入→ピボット→検知→対応 | 構築済（分離の到達性確認済／攻撃筋書きは手順） |

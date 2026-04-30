@@ -1,0 +1,19 @@
+services:
+  attacker:
+    image: hacklabo/attacker:latest
+    hostname: attacker
+    volumes: ["./:/work"]
+    networks: [lab]
+
+  # 軽量IdP+RP（Keycloak不使用）
+  app:
+    build: ./app
+    init: true
+    hostname: app
+    mem_limit: 128m
+    ports: ["127.0.0.1:8083:8080"]   # http://127.0.0.1:8083
+    networks: [lab]
+
+networks:
+  lab:
+    ipam: { config: [{ subnet: 10.10.12.0/24 }] }

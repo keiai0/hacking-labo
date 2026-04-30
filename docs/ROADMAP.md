@@ -18,8 +18,10 @@
 - [x] **scenarios/corp-network** — 外部/DMZ/内部のFW分離、到達性検証、侵入筋書き
 
 ## 残り（最後に実施予定）
-- [ ] **auth/keycloak（OAuth/OIDC）＝軽量版** — redirect_uri検証不備、stateのCSRF、IDトークン検証不備。
-  - ※ 実務経験があるため要点のみ。Keycloakは重いので自作の小型OAuthでも可。
+- [x] **auth（OAuth/OIDC）＝軽量版**（`auth`）— redirect_uri検証不備・state欠如・PKCEなし・IDトークン検証不備の4種を自作IdP+RPで確認済み。
+  - 実機Keycloakで特定設定を触りたくなったら別途追加。
+
+当初計画の全分野を構築完了。以降は下記の拡充候補のみ。
 
 ## 拡充候補（任意・優先度順の目安）
 
