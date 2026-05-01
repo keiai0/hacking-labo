@@ -69,6 +69,7 @@ flowchart LR
 | ネットワーク演習場 | `network/playground` | 偵察、盗聴、ARP、DNS、FW、TLS-MITM | 構築済（偵察・盗聴・FW・IDS・DNS動作確認済／ARP・TLS-MITMは手順記載） |
 | Webアプリ | `web/webapp` | SQLi, XSS, OSコマンド, パストラバーサル, SSRF, リダイレクト, CORS, CSRF, セッション固定, JWT, 総当たり, XXE(PHP) ＋ WAFトグル | 構築済（11ページ＋WAF） |
 | PKI/TLS | `crypto/pki` | 自前CA、証明書検証とMITM、電子署名 | 構築済（検証有無でMITM成否・署名の改ざん検知を確認済） |
+| 検知基盤 | `detection` | 軽量SIEM（Loki+Grafana+Promtail）、LogQLで総当たり検知 | 構築済（LogQLで検知・Grafana可視化を確認済） |
 | 解析 | `analysis/password-crack`, `analysis/forensics` | パスワード解析、フォレンジック（pcap/C2発見） | 構築済（パスワード解析・ネットワークフォレンジック）／メモリ・ディスクは任意 |
 | メール | `mail` | なりすまし → SPF/DKIM/DMARC、オープンリレー | 構築済（オープンリレー・SPF動作確認済／DKIMは解説） |
 | OAuth/OIDC | `auth` | redirect_uri/state/PKCE/IDトークン検証の不備（軽量自作IdP+RP） | 構築済（4種の不備を vuln/fixed で確認済） |

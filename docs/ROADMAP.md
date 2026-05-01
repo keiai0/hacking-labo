@@ -4,6 +4,7 @@
 
 ## 構築済みの標的環境
 - [x] **crypto/pki** — 自前CA、証明書検証とMITM、電子署名（改ざん検知）
+- [x] **detection** — 軽量SIEM（Loki+Grafana+Promtail）、LogQLで総当たり検知
 - [x] **network/playground** — 偵察(nmap)、盗聴(平文↔暗号)、FWトグル、IDS(Suricata)、DNSゾーン転送
   - [~] ARPスプーフィング（ツールは用意、手順のみ）
   - [~] TLS証明書検証不備のMITM（手順のみ）
@@ -27,7 +28,7 @@
 
 ### 高：試験頻出・手を動かす価値が高い
 - [x] **PKI/TLS 専用ラボ**（`crypto/pki`）— 自前CA、サーバ証明書発行、検証あり/なしでMITMの成否、電子署名の改ざん検知。
-- [ ] **検知基盤（軽量SIEM）トグル** — rsyslog→Loki→Grafana でログ集約・相関。各環境に後付けするトグル化。
+- [x] **検知基盤（軽量SIEM）**（`detection`）— Loki+Grafana+Promtail。認証ログを集約し、LogQLで総当たりを検知。各ラボのログを収集対象に向ければ横断利用可。
 - [ ] **webapp 追加ページ** — ファイルアップロード検証不備、IDOR、SSTI、LFI/RFI(PHP)、セキュリティヘッダ/CSP、WAFバイパス演習。
 
 ### 中：分野の穴埋め

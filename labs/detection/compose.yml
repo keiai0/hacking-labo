@@ -1,0 +1,49 @@
+services:
+  # ログ集約基盤（軽量SIEM相当）
+  loki:
+    image: grafana/loki:2.9.10
+    hostname: loki
+    mem_limit: 256m
+    ports: ["127.0.0.1:3100:3100"]   # HTTP API（LogQL）
+    networks: [lab]
+
+  # ログ収集（/logs を tail して Loki へ送る）
+  promtail:
+    image: grafana/promtail:2.9.10
+    depends_on: [loki]
+    volumes:
+      - "logs:/logs:ro"
+      - "./promtail/promtail-config.yaml:/etc/promtail/config.yml:ro"
+    command: ["-config.file=/etc/promtail/config.yml"]
+    networks: [lab]
+
+  # 可視化（ブラウザで探索）
+  grafana:
+    image: grafana/grafana:11.2.0
+    hostname: grafana
+    mem_limit: 256m
+    depends_on: [loki]
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+      GF_SECURITY_ADMIN_PASSWORD: "admin"
+    volumes:
+      - "./grafana/datasources:/etc/grafana/provisioning/datasources:ro"
+    ports: ["127.0.0.1:3000:3000"]   # http://127.0.0.1:3000
+    networks: [lab]
+
+  # ログ生成（総当たりの兆候を含む認証ログ）
+  loggen:
+    build: ./loggen
+    init: true
+    hostname: loggen
+    mem_limit: 64m
+    volumes: ["logs:/logs"]
+    networks: [lab]
+
+volumes:
+  logs:
+
+networks:
+  lab:
+    ipam: { config: [{ subnet: 10.10.13.0/24 }] }
