@@ -14,6 +14,7 @@
 パスワードはいずれも rockyou に含まれる弱いもの（princess など）。fixed の carol だけ強いパスワード。
 
 ## 攻撃
+`/loot` のハッシュ・ZIPは vuln コンテナの `gen.sh` が生成して置いたもの。攻撃者はそれを John the Ripper（`john`：辞書でハッシュを解析）や hashcat で解析する。`$WL` は Kali 同梱の定番辞書 rockyou。
 ```sh
 make up    LAB=analysis/password-crack
 make shell LAB=analysis/password-crack

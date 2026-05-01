@@ -21,6 +21,9 @@ make shell   LAB=analysis/forensics
 pcap は `captures/forensics/*.pcap`（Mac の Wireshark でも開ける）。
 
 ## 解析のポイント
+**目的**: 解析役（防御側）が、正規通信に紛れた感染ホスト→C2のビーコンをpcapから見分け、何が持ち出されたかを復元する。手がかりを知らない状態から「宛先の偏り → 一定周期 → 不審なUA/URI → 中身の復元」と辿るのがこの演習。
+
+**このラボが流しているもの**（`infected/beacon.sh`）: 感染ホスト(10.10.7.20)が5秒ごとに C2(10.10.7.66) の `/api/beacon` へPOSTし、持ち出しデータ `user=alice;card=4111111111111111;host=INFECTED01` を**base64化してフォーム項目 `d=` に詰めて**送る。User-Agentは `beacon/1.0`。合間に正規サイト(10.10.7.30)へのアクセスをノイズとして混ぜている。下の手順の `ip.dst==10.10.7.66` や `d=` はこの通信に由来する。
 ```sh
 f=$(ls -t /captures/forensics/*.pcap | head -1)
 
@@ -33,10 +36,10 @@ tshark -r "$f" -Y 'http.request && ip.dst==10.10.7.66' \
 
 # 3) 不審な User-Agent / URI（/api/beacon, beacon/1.0）
 
-# 4) 持ち出しデータの復元（base64をデコード）
+# 4) 持ち出しデータの復元: C2宛POSTのフォーム値を取り出し、d= を外してbase64デコード
 tshark -r "$f" -Y 'http.request && ip.dst==10.10.7.66' \
   -T fields -e urlencoded-form.value | head -1 | sed 's/^d=//' | base64 -d
-# → user=alice;card=4111111111111111;host=INFECTED01
+# → user=alice;card=4111111111111111;host=INFECTED01（持ち出された中身が平文で復元できる）
 ```
 
 ビーコンの典型的特徴: **一定間隔・同一宛先・小さく規則的なサイズ・不審なUA/URI**。正規通信（web宛）と混在する中から見分ける。
