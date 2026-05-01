@@ -80,6 +80,7 @@ func main() {
 	http.HandleFunc("/ssrf", ssrfHandler)
 	http.HandleFunc("/redirect", redirectHandler)
 	http.HandleFunc("/cors", corsHandler)
+	http.HandleFunc("/cors/api", corsAPIHandler)
 	http.HandleFunc("/csrf", csrfHandler)
 	http.HandleFunc("/session", sessionHandler)
 	http.HandleFunc("/jwt", jwtHandler)

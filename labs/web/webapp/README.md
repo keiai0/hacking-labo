@@ -9,6 +9,7 @@ Web系の脆弱性を1つのGoアプリにまとめた演習環境。**1ペー�
 |---|---|---|
 | http://127.0.0.1:8080 | ブラウザ → アプリ直結 | なし |
 | http://127.0.0.1:8090 | ブラウザ → ModSecurity(CRS) → アプリ | あり（`make waf-on` 時） |
+| http://127.0.0.1:9000 | 攻撃者オリジン（CORS演習専用の別オリジン静的ページ） | — |
 
 - ブラウザ（Firefox）と Burp Suite は **Mac から**操作する。
 - 攻撃用コンテナ（sqlmap 等）には `make shell LAB=web/webapp` で入る。コンテナ内からアプリは `http://app:8080` で見える（`127.0.0.1:8080` は Mac から見た同じアプリ）。
@@ -45,9 +46,12 @@ make up LAB=web/webapp
 **攻撃ツールでの自動化**（攻撃用コンテナ内。`app` はコンテナから見たアプリのホスト名）
 ```sh
 make shell LAB=web/webapp
-sqlmap -u 'http://app:8080/sqli?q=1' --batch --dump -T users
-#  → sqlmap が脆弱性を自動検出し、users テーブルを丸ごとダンプする
+sqlmap -u 'http://app:8080/sqli?q=Keyboard' --dbms=sqlite --batch --dump -T users
+#  → sqlmap が q の脆弱性を自動検出し、users テーブル(admin/S3cr3t-admin! など)を丸ごとダンプする
 ```
+- `q=Keyboard`: 検索語は**実在する商品名**にする（`app/main.go` の投入値）。`q=1` のように何もヒットしない語だと、注入してもページが変化せず sqlmap が「検出の手がかりなし(not dynamic)」と判断して失敗する。
+- `--dbms=sqlite`: このアプリのDBは SQLite。指定しないと sqlmap が MySQL 等を手当たり次第に試して外すことがある。
+- （対策版を狙う `?mode=fixed&q=Keyboard` に対して撃つと、プレースホルダのため sqlmap は「injectableではない」で終わる。根本対策が効いている証明になる）
 
 ---
 
@@ -62,7 +66,7 @@ sqlmap -u 'http://app:8080/sqli?q=1' --batch --dump -T users
 | `/path` | パストラバーサル。`../` でWebルート外のファイルを読む | `../../../../etc/passwd` | ベース+入力を連結 | `filepath.Base`＋配下チェック |
 | `/ssrf` | SSRF。サーバに任意URLを取得させ内部へ到達 | `http://app:8080/sqli` | 任意URLをサーバ取得 | スキーム/ホストをallowlist |
 | `/redirect` | オープンリダイレクト。外部サイトへ誘導できる | `?to=https://example.com/` | 入力URLへそのまま遷移 | 相対パスのみ許可 |
-| `/cors` | CORS設定ミス。悪性OriginにJSONを読ませる | `Origin: https://evil.example` | Originを無検証で反射 | allowlist一致のみ許可 |
+| `/cors` | CORS設定ミス。**別オリジンの攻撃者ページが被害者の認証付きAPI応答を読めてしまう**（下の専用手順で体験） | — | Originを無検証で反射＋credentials許可 | allowlist一致のみ許可 |
 | `/csrf` | CSRF。トークン無しの偽リクエストが通る | トークン無しPOST | トークン検証なし | トークン必須（不一致は403） |
 | `/session` | セッション固定。攻撃者が仕込んだSIDが有効化 | 事前SIDでログイン | ログイン時にID再生成せず | ログイン時に新ID発行 |
 | `/jwt` | JWT検証不備。`alg=none` の偽トークンを受理 | `alg=none` & `role=admin` | alg=none を受理 | 署名必須・alg=none拒否 |
@@ -71,6 +75,28 @@ sqlmap -u 'http://app:8080/sqli?q=1' --batch --dump -T users
 
 - `/xxe` のみ PHP サイドカー（`phpapp`）で動作し、Goアプリが `/xxe` をプロキシする（Go標準XMLは外部実体を扱わないため、題材としてPHPを使う）。
 - 各入力が「なぜ脆弱版でだけ成立し、対策版で失敗するか」は、対応する `app/<名前>.go` の `vuln`/`fixed` 分岐を読むと確認できる。
+
+---
+
+## 演習の通し例) CORS 設定ミス（別オリジンからの認証付き読み取り）
+**目的**: CORSは「リクエストの送信可否」ではなく「**呼び出した側(JS)が応答を読んでよいか**」をブラウザが判定する仕組み。サーバがOriginを無検証で反射し credentials を許可すると、**攻撃者サイトのJSが、被害者のログインCookieを使って被害者の認証付きAPI応答を読み取れてしまう**ことを、実際にブラウザで体験する。
+
+**なぜcurlでは本質が見えないか**: CORSを強制するのは**ブラウザ**であって、curlには同一オリジンポリシーが無い。curlは `Access-Control-*` に関係なく応答を読めるので、「curlで取れた」はCORSの可否と無関係。だからこの演習は**ブラウザで、2つのオリジンを使って**行う。
+
+**登場人物（このラボの作り）**:
+- `app`（`http://127.0.0.1:8080`）… 被害者が使う正規サイト。`/cors` を開くとログインCookieを発行し、`/cors/api` は**Cookieがある時だけ** victim の秘密（残高・APIキー）を返す。
+- 攻撃者オリジン（`http://127.0.0.1:9000`、`evil/index.html`）… app とは**別オリジン**のページ。victim のブラウザ内で、Cookie付き(`credentials:'include'`)で `/cors/api` を読もうとする。
+- ※ `127.0.0.1` の別ポートは「**同一サイト**（＝Cookieは送られる）だが**別オリジン**（＝CORSが効く）」という、この演習に都合のよい関係。
+
+**手順**（すべて Mac のブラウザ＝Firefox で）
+1. victim としてログイン状態を作る。`http://127.0.0.1:8080/cors` を開く（ログインCookie `cors_session` が発行される）。
+2. 攻撃者ページを開く。`http://127.0.0.1:9000/` を開き、**「脆弱版APIを盗む」**ボタンを押す。
+   - → 画面に `victim の秘密データ: {"user":"alice","balance":...,"apiKey":"SECRET-..."}` が表示される。**別オリジンの攻撃者ページが、victim の認証付き応答を読めてしまった**＝漏洩成立。
+3. **「対策版APIを盗む」**ボタンを押す。
+   - → `🛡 ブラウザが遮断（CORSエラー）`。対策版は攻撃者オリジンにCORS許可を出さないので、応答はネットワーク上には届いても**ブラウザがJSへの引き渡しを拒否**する。
+4. ブラウザの開発者ツール → ネットワークタブで `/cors/api` のレスポンスヘッダを見ると、脆弱版は `Access-Control-Allow-Origin: http://127.0.0.1:9000` ＋ `Access-Control-Allow-Credentials: true` が付き、対策版は付かない。この1ヘッダの有無が、上の「読めた/遮断」を分けている。
+
+**要点**: 攻撃者は元々リクエストを送ること自体は防げない（curlの通り誰でも送れる）。守るべきは「**意図しないオリジンに、被害者の認証付き応答の読み取りを許さない**」こと。対策はOriginの無検証反射をやめ、**許可リストと完全一致**した時だけ許可する（`app/cors.go` の `fixed` 分岐）。
 
 ## WAFトグル
 ```sh

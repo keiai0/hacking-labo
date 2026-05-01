@@ -15,6 +15,14 @@ services:
     ports: ["127.0.0.1:8080:8080"]   # WAFなし直結
     networks: [lab]
 
+  # CORS演習の「攻撃者オリジン」。app(:8080)とは別オリジン(:9000)で攻撃者ページを配信する。
+  # 127.0.0.1 の別ポートは「同一サイト(Cookieは送られる)だが別オリジン(CORSが効く)」。
+  evil:
+    image: nginx:1.27-alpine
+    volumes: ["./evil:/usr/share/nginx/html:ro"]
+    ports: ["127.0.0.1:9000:80"]
+    networks: [lab]
+
   # XXE演習用PHP（Goアプリが /xxe をここへプロキシ）。直接公開しない
   phpapp:
     build: ./php
