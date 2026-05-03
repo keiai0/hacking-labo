@@ -10,6 +10,8 @@
 | grafana | 可視化（Lokiデータソースを provisioning 済み） | 127.0.0.1:3000 |
 | loggen | 認証ログを生成（特定IPからの連続失敗＝総当たりを含む） | — |
 
+**検知対象のログ（このラボが生成しているもの）**: `loggen` が5秒ごとに `/logs/auth.log` へ sshd 風の認証ログを書く（`loggen/gen.sh`）。1周ごとに、正規ログイン `Accepted password for alice from 10.0.0.5` を少数と、**攻撃者IP `203.0.113.9` からの `Failed password for admin` を8連発**（＝総当たりの兆候）を混ぜている。promtail がこれを収集し `job="auth"` のラベルで Loki に入れる。以降のクエリで使う `203.0.113.9` や `Failed password` はこの生成ログに由来する。
+
 ## 使い方
 ```sh
 make up LAB=detection
@@ -17,6 +19,9 @@ make up LAB=detection
 ```
 
 ## 検知（LogQL）
+**目的**: 集約したログに対し、防御側がLogQLで「特定IPからの失敗ログインが短時間に多発している」という総当たりの兆候を抽出・集計し、しきい値アラートの土台を作る。
+
+以下は Loki のHTTP APIを直接叩く例（Grafanaを使わずコマンドで確認する場合）。`start`/`end` は**ナノ秒のUNIX時刻**で渡す必要があるため、秒に `000000000` を付けている（Lokiの仕様）。
 ```sh
 # 1) 失敗ログインの抽出
 curl -s --get http://127.0.0.1:3100/loki/api/v1/query_range \
